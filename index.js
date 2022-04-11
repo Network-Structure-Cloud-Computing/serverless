@@ -14,8 +14,8 @@ var sendEmail = (data) => {
     let link = `http://${data.domainName}/v1/verifyUserEmail?email=${data.username}&token=${data.token}`;
 
     let body = "Hi "+ data.first_name +" ,\n\n"+
-    "You created a profile on our application, You need to verify that this is your email address before using your account by clicking on this link:" +"\n"+ link + 
-    "Thanks & Regards,\n\n noreply@"+data.domainName
+    "You created a profile on our application, You need to verify that this is your email address before using your account by clicking on this link:" +"\n"+ link + "\n\n\n"+
+    "Thanks & Regards,\n noreply@"+data.domainName
     let from = "noreply@"+data.domainName
     let emailBody = {
         Destination: {
