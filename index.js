@@ -14,7 +14,7 @@ exports.handler = (event, context, callback) => {
         let searchParams = {
             TableName: "dynamo_db_email",
             Key: {
-                "email": msg.username
+                "username": msg.username
             }
         };
         DynamoDB.get(searchParams, function(error, record){
