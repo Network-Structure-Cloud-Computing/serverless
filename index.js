@@ -1,10 +1,10 @@
 const aws = require("aws-sdk");
 const ses = new aws.SES({ region: "us-east-1" });
 
-const dynamo = new AWS.DynamoDB({
+const dynamo = new aws.DynamoDB({
     region
 })
-const DynamoDB = new AWS.DynamoDB.DocumentClient({
+const DynamoDB = new aws.DynamoDB.DocumentClient({
     service: dynamo
 });
 
