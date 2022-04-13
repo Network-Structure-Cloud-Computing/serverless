@@ -1,8 +1,10 @@
 const aws = require("aws-sdk");
-const ses = new aws.SES({ region: "us-east-1" });
+const ses = new aws.SES({
+    region: "us-east-1"
+});
 
 const dynamo = new aws.DynamoDB({
-    region
+    region: "us-east-1"
 })
 const DynamoDB = new aws.DynamoDB.DocumentClient({
     service: dynamo
@@ -10,21 +12,39 @@ const DynamoDB = new aws.DynamoDB.DocumentClient({
 
 exports.handler = (event, context, callback) => {
     let msg = JSON.parse(event.Records[0].Sns.Message);
-    if(!msg.verified) {
+    if (!msg.verified) {
         let searchParams = {
             TableName: "dynamo_email",
             Key: {
                 "username": msg.username
             }
         };
-        DynamoDB.get(searchParams, function(error, record){
-            if(error) {
-                logger.info({msg: "Error in DynamoDB get method ", error: error});
-                console.log("Error in DynamoDB get method ",error);
-                return res.status(400).json(error);
+        DynamoDB.get(searchParams, function (error, record) {
+            if (error) {
+                console.log("Error in DynamoDB get method ", error);
             } else {
-                console.log(record)
-                // sendEmail(msg);
+                if (!record.Item.isSend) {
+                    const params = {
+                        TableName: "dynamo_email",
+                        Key: {
+                            "username": msg.username
+                        },
+                        UpdateExpression: "set #MyVariable = :x",
+                        ExpressionAttributeNames: {
+                            "#MyVariable": "isSend"
+                        },
+                        ExpressionAttributeValues: {
+                            ":x": true
+                        }
+                    };
+                    DynamoDB.update(params, function (err, data) {
+                        if (err) console.log(err);
+                        else console.log(data);
+                    });
+                    sendEmail(msg);
+                } else {
+                    console.log('Verification Mail Already Send to email: ' + msg.username);
+                }
             }
         });
     }
@@ -34,26 +54,30 @@ var sendEmail = (data) => {
 
     let link = `http://${data.domainName}/v1/verifyUserEmail?email=${data.username}&token=${data.token}`;
     let body = `<html><body>Hi ${data.first_name},<br> Your profile has been created successfully on our application. You need to verify your email address before using your account by clicking on this link: <br><br><a href=${link}>Verify your account</a><br><br><br> Kind Regards,<br> <strong>${data.domainName}<strong></body></html>`
-    let from = "noreply@"+data.domainName
+    let from = "noreply@" + data.domainName
     let emailBody = {
         Destination: {
             ToAddresses: [data.username],
         },
         Message: {
             Body: {
-                Html: { Data: body },
+                Html: {
+                    Data: body
+                },
             },
-            Subject: { Data: "User Account Verification Email" },
+            Subject: {
+                Data: "User Account Verification Email"
+            },
         },
         Source: from,
     };
 
     let sendEmailProm = ses.sendEmail(emailBody).promise()
     sendEmailProm
-        .then(function(result) {
+        .then(function (result) {
             console.log(result);
         })
-        .catch(function(err) {
+        .catch(function (err) {
             console.error(err, err.stack);
         });
 }
