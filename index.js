@@ -1,11 +1,32 @@
-var aws = require("aws-sdk");
-var ses = new aws.SES({ region: "us-east-1" });
-// var DynamoDB = new aws.DynamoDB.DocumentClient();
+const aws = require("aws-sdk");
+const ses = new aws.SES({ region: "us-east-1" });
+
+const dynamo = new AWS.DynamoDB({
+    region
+})
+const DynamoDB = new AWS.DynamoDB.DocumentClient({
+    service: dynamo
+});
 
 exports.handler = (event, context, callback) => {
     let msg = JSON.parse(event.Records[0].Sns.Message);
     if(!msg.verified) {
-        sendEmail(msg);
+        let searchParams = {
+            TableName: "dynamo_db",
+            Key: {
+                "email": msg.username
+            }
+        };
+        DynamoDB.get(searchParams, function(error, record){
+            if(error) {
+                logger.info({msg: "Error in DynamoDB get method ", error: error});
+                console.log("Error in DynamoDB get method ",error);
+                return res.status(400).json(error);
+            } else {
+                console.log(record)
+                // sendEmail(msg);
+            }
+        });
     }
 }
 
