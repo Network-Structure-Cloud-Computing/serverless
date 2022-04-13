@@ -12,7 +12,7 @@ exports.handler = (event, context, callback) => {
     let msg = JSON.parse(event.Records[0].Sns.Message);
     if(!msg.verified) {
         let searchParams = {
-            TableName: "dynamo_db_email",
+            TableName: "dynamo_email",
             Key: {
                 "username": msg.username
             }
